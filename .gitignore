@@ -1,0 +1,51 @@
+# =========================
+# System & IDE
+# =========================
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+*.iml
+*.log
+
+# =========================
+# Environment Variables
+# =========================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# =========================
+# Backend (Spring Boot / Maven)
+# =========================
+backend/target/
+backend/bin/
+backend/*.log
+backend/logs/
+backend/hs_err_pid*
+backend/.mvn/wrapper/maven-wrapper.jar
+
+# Bỏ qua các file cấu hình build tự động sinh nếu có
+backend/.factorypath
+backend/.springBeans
+
+# =========================
+# Frontend (Node.js / React / Vite)
+# =========================
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.eslintcache
+frontend/.vite/
+
+# Bỏ qua các file coverage nếu có chạy test
+frontend/coverage/
+
+# Bỏ qua npm/yarn debug logs
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
