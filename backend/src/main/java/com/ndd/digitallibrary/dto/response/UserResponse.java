@@ -1,5 +1,6 @@
 package com.ndd.digitallibrary.dto.response;
 
+import com.ndd.digitallibrary.entity.User;
 import lombok.*;
 
 @Setter @Getter
@@ -14,4 +15,16 @@ public class UserResponse {
     private String avatarUrl;
     private String userStatus;
     private String subscriptionTier;
+
+    public static UserResponse fromEntity(User user){
+        return UserResponse.builder()
+                .id(user.getId())
+                .fullName(user.getFullName())
+                .email(user.getEmail())
+                .role(user.getRole().name())
+                .avatarUrl(user.getAvatarUrl())
+                .userStatus(user.getUserStatus().name())
+                .subscriptionTier(user.getSubscriptionTier().name())
+                .build();
+    }
 }
