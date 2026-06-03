@@ -21,5 +21,5 @@ public class RegisterRequest {
     @Size(min = 8, message = "Mật khẩu phải có ít nhất 8 ký tự")
     private String password;
 
-    private Role role;
+    private String role;
 }
