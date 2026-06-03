@@ -25,10 +25,9 @@ public class User extends BaseEntity implements UserDetails {
     private String fullName;
 
     @Email
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String email;
 
-    @Size(min = 3, message = "Password must be at least 3 characters")
     @Column(nullable = false)
     private String password;
 
@@ -72,7 +71,7 @@ public class User extends BaseEntity implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return UserDetails.super.isAccountNonLocked();
+        return this.userStatus != UserStatus.SUSPENDED;
     }
 
     @Override
@@ -82,6 +81,6 @@ public class User extends BaseEntity implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return UserDetails.super.isEnabled();
+        return this.userStatus == UserStatus.ACTIVE;
     }
 }
