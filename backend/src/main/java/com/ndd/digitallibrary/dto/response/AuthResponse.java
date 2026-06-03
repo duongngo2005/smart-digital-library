@@ -1,5 +1,6 @@
 package com.ndd.digitallibrary.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 
 @Getter @Setter
@@ -9,5 +10,8 @@ import lombok.*;
 public class AuthResponse {
     private String accessToken;
     private String tokenType;
+
+    @JsonIgnore
+    private String refreshToken;
     private UserResponse userResponse;
 }
