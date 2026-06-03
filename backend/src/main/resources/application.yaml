@@ -14,3 +14,9 @@ spring:
 server:
   servlet:
     context-path: api/v1
+
+app:
+  jwt:
+    secret: U21hcnREaWdpdGFsTGlicmFyeVNlY3JldEtleUZvckhTMjU2QWxnb3JpdGhtMjAyNA
+    access-expiration-ms: 900000
+    refresh-expiration-ms: 604800000
