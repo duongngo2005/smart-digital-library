@@ -9,5 +9,5 @@ public class CreateCategoryRequest {
     @NotBlank(message = "Không được để trống tên chủ đề")
     private String name;
     private String description;
-    private String parent;
+    private Long parent;
 }
