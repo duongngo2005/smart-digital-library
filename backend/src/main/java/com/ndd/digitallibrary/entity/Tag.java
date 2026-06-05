@@ -16,6 +16,9 @@ public class Tag extends BaseEntity{
     @Column(nullable = false, unique = false)
     private String name;
 
+    @Column(nullable = false)
+    private String slug;
+
     @Builder.Default
     @ManyToMany(mappedBy = "tags")
     private List<Document> documents = new ArrayList<>();
