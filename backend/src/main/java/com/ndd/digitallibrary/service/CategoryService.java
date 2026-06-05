@@ -18,7 +18,10 @@ import java.util.Objects;
 public class CategoryService {
 
     private final CategoryRepository categoryRepository;
-    private final Slugify slugify = Slugify.builder().build();
+    private final Slugify slugify = Slugify.builder()
+            .customReplacement("đ", "d")
+            .customReplacement("Đ", "D")
+            .build();
 
     @Transactional
     public CategoryResponse createCategory(CreateCategoryRequest request){
