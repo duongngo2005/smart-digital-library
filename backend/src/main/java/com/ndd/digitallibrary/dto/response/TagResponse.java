@@ -14,7 +14,7 @@ public class TagResponse {
     public static TagResponse fromEntity(Tag tag){
         return TagResponse.builder()
                 .id(tag.getId())
-                .name(builder().name)
+                .name(tag.getName())
                 .slug(tag.getSlug())
                 .build();
     }
