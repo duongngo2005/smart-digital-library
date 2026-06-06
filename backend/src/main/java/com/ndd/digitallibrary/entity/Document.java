@@ -26,7 +26,6 @@ public class Document extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String description;
     private String coverUrl;
-    @Column(nullable = false)
     private String coverPublicId;
     @Column(nullable = false)
     private String fileUrl;

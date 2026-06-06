@@ -23,7 +23,7 @@ public class CloudinaryService {
                     ObjectUtils.asMap(
                             "folder", "digital-library/covers",
                             "resource_type", "image",
-                            "allowed_formats", "jpg, jpeg, png, webp"
+                            "allowed_formats", "jpg,jpeg,png,webp"
                     )
             );
 
@@ -42,7 +42,7 @@ public class CloudinaryService {
                     file.getBytes(),
                     ObjectUtils.asMap(
                             "folder", "digital-library/documents",
-                            "resource_type", "auto",
+                            "resource_type", "raw",
                             "allowed_formats", "pdf"
                     )
             );

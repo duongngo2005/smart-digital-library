@@ -17,7 +17,7 @@ public class CreateDocumentRequest {
     private String title;
     private String author;
     private String publisher;
-    private int publishedYear;
+    private Integer publishedYear;
     private String description;
 
     private DocumentStatus documentStatus;
