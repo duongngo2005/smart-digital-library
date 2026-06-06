@@ -47,6 +47,15 @@ public class DocumentService {
     @Transactional
     public DocumentResponse createDocument(CreateDocumentRequest request, String userEmail){
 
+        if(documentRepository.existsByTitleAndAuthorAndPublisherAndPublishedYear(
+                request.getTitle(),
+                request.getAuthor(),
+                request.getPublisher(),
+                request.getPublishedYear()
+        )){
+            throw new RuntimeException("Tài liệu đã tồn tại trong hệ thống");
+        }
+
         User uploader = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng hiện tại"));
 

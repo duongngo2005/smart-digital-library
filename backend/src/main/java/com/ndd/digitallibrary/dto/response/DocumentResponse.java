@@ -18,7 +18,6 @@ public class DocumentResponse {
     private String publisher;
     private String description;
     private String coverUrl;
-    private String fileUrl;
     private String fileType;
     private BigDecimal fileSizeMb;
     private boolean publicAccess;
@@ -39,7 +38,6 @@ public class DocumentResponse {
                 .publishedYear(document.getPublishedYear())
                 .description(document.getDescription())
                 .coverUrl(document.getCoverUrl())
-                .fileUrl(document.getFileUrl())
                 .fileSizeMb(document.getFileSizeMb())
                 .fileType(document.getFileType().name())
                 .publicAccess(document.isPublicAccess())

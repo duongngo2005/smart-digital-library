@@ -10,6 +10,10 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 55MB
 
 server:
   servlet:
@@ -22,6 +26,6 @@ app:
     refresh-expiration-ms: 604800000
 
 cloudinary:
-  cloud-name: Root
+  cloud-name: docidan7t
   api-key: 131775748839957
   api-secret: 94Gm4Ui5GNzEHzkehkYrh3wVFr4
