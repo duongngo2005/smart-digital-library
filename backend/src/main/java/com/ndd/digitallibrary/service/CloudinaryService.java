@@ -2,6 +2,7 @@ package com.ndd.digitallibrary.service;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
+import com.ndd.digitallibrary.dto.response.CloudinaryResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -15,24 +16,27 @@ public class CloudinaryService {
 
     private final Cloudinary cloudinary;
 
-    public String uploadThumbnail(MultipartFile file){
+    public CloudinaryResponse uploadCover(MultipartFile file){
         try{
             Map<?, ?> result = cloudinary.uploader().upload(
                     file.getBytes(),
                     ObjectUtils.asMap(
-                            "folder", "digital-library/thumbnails",
+                            "folder", "digital-library/covers",
                             "resource_type", "image",
                             "allowed_formats", "jpg, jpeg, png, webp"
                     )
             );
 
-            return result.get("secure_url").toString();
+            return new CloudinaryResponse(
+                    result.get("secure_url").toString(),
+                    result.get("public_id").toString()
+            );
         } catch (IOException e) {
             throw new RuntimeException("Upload ảnh bìa thất bại " + e.getMessage());
         }
     }
 
-    public String uploadDocument(MultipartFile file){
+    public CloudinaryResponse uploadDocument(MultipartFile file){
         try{
             Map<?, ?> result = cloudinary.uploader().upload(
                     file.getBytes(),
@@ -43,7 +47,10 @@ public class CloudinaryService {
                     )
             );
 
-            return result.get("secure_url").toString();
+            return new CloudinaryResponse(
+                    result.get("secure_url").toString(),
+                    result.get("public_id").toString()
+            );
         } catch (IOException e) {
             throw new RuntimeException("Upload tài liệu thất bại " + e.getMessage());
         }
