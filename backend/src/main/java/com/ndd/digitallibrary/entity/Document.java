@@ -27,9 +27,11 @@ public class Document extends BaseEntity {
     private String description;
     private String coverUrl;
     @Column(nullable = false)
+    private String coverPublicId;
+    @Column(nullable = false)
     private String fileUrl;
     @Column(nullable = false)
-    private String cloudinaryPublicId;
+    private String filePublicId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
