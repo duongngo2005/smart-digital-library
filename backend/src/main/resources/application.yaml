@@ -20,3 +20,8 @@ app:
     secret: U21hcnREaWdpdGFsTGlicmFyeVNlY3JldEtleUZvckhTMjU2QWxnb3JpdGhtMjAyNA
     access-expiration-ms: 900000
     refresh-expiration-ms: 604800000
+
+cloudinary:
+  cloud-name: Root
+  api-key: 131775748839957
+  api-secret: 94Gm4Ui5GNzEHzkehkYrh3wVFr4
