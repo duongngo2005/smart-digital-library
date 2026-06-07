@@ -24,8 +24,11 @@ public class AccessLog extends BaseEntity {
     private Document document;
 
     @Column(nullable = false)
-    private LocalDateTime lastReadAt;
+    private LocalDateTime lastReadAt = LocalDateTime.now();
 
     @Builder.Default
     private boolean hasDownloaded = false;
+
+    @Builder.Default
+    private int lastReadPage = 1;
 }
