@@ -4,6 +4,7 @@ import com.ndd.digitallibrary.dto.request.CreateDocumentRequest;
 import com.ndd.digitallibrary.dto.request.UpdateDocumentRequest;
 import com.ndd.digitallibrary.dto.response.CloudinaryResponse;
 import com.ndd.digitallibrary.dto.response.DocumentResponse;
+import com.ndd.digitallibrary.dto.response.DocumentSummaryResponse;
 import com.ndd.digitallibrary.entity.Category;
 import com.ndd.digitallibrary.entity.Document;
 import com.ndd.digitallibrary.entity.Tag;
@@ -40,8 +41,8 @@ public class DocumentService {
         return DocumentResponse.fromEntity(document);
     }
 
-    public List<DocumentResponse> getAllDocuments(){
-        return documentRepository.findAll().stream().map(DocumentResponse::fromEntity).toList();
+    public List<DocumentSummaryResponse> getAllDocuments(){
+        return documentRepository.findAll().stream().map(DocumentSummaryResponse::fromEntity).toList();
     }
 
     @Transactional
