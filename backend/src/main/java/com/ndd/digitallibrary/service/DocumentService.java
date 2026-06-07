@@ -5,23 +5,26 @@ import com.ndd.digitallibrary.dto.request.UpdateDocumentRequest;
 import com.ndd.digitallibrary.dto.response.CloudinaryResponse;
 import com.ndd.digitallibrary.dto.response.DocumentResponse;
 import com.ndd.digitallibrary.dto.response.DocumentSummaryResponse;
-import com.ndd.digitallibrary.entity.Category;
-import com.ndd.digitallibrary.entity.Document;
-import com.ndd.digitallibrary.entity.Tag;
-import com.ndd.digitallibrary.entity.User;
+import com.ndd.digitallibrary.entity.*;
 import com.ndd.digitallibrary.enums.FileType;
+import com.ndd.digitallibrary.enums.Role;
+import com.ndd.digitallibrary.enums.SubscriptionTier;
+import com.ndd.digitallibrary.repository.AccessLogRepository;
 import com.ndd.digitallibrary.repository.CategoryRepository;
 import com.ndd.digitallibrary.repository.DocumentRepository;
 import com.ndd.digitallibrary.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -32,6 +35,14 @@ public class DocumentService {
     private final TagService tagService;
     private final CloudinaryService cloudinaryService;
     private final UserRepository userRepository;
+    private final AccessLogService accessLogService;
+    private final AccessLogRepository accessLogRepository;
+
+    @Value("${app.subscription.plus-download-limit:100}")
+    private int plusDownloadLimit;
+
+    @Value("${app.subscription.pro-download-limit:300}")
+    private int proDownloadLimit;
 
     public DocumentResponse getDocumentById(Long id){
 
@@ -189,4 +200,80 @@ public class DocumentService {
         return DocumentResponse.fromEntity(document);
     }
 
+    public String getStreamUrl(Long documentId, Long userId){
+
+        Document document = documentRepository.findById(documentId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấ tài liệu này"));
+
+        if(!document.isPublicAccess() && userId == null){
+            throw new RuntimeException("Đăng nhập để đọc tài liệu này");
+        }
+
+        if(userId != null){
+            accessLogService.recordReading(documentId, userId);
+        }
+
+        return cloudinaryService.generateSignedUrl(document.getFilePublicId(), "raw");
+    }
+
+    @Transactional
+    public String getDownloadUrl(Long documentId, Long userId){
+        if(userId == null){
+            throw new RuntimeException("Đăng nhập để tải tài liệu");
+        }
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng hiện tại"));
+        Document document = documentRepository.findById(documentId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy tài liệu"));
+
+        if(user.getRole() == Role.ADMIN || user.getRole() == Role.LIBRARIAN){
+            accessLogService.recordDownload(documentId, userId);
+            return cloudinaryService.generateDownloadUrl(document.getFilePublicId(), "raw");
+        }
+
+        if(user.getSubscriptionTier() != SubscriptionTier.MEMBER && user.getSubscriptionUntil() != null){
+            if(LocalDateTime.now().isAfter(user.getSubscriptionUntil())){
+                user.setSubscriptionTier(SubscriptionTier.MEMBER);
+                user.setCurrentCycleEnd(null);
+                user.setDownloadedThisMonth(0);
+                user.setSubscriptionStartAt(null);
+                user.setSubscriptionUntil(null);
+                userRepository.save(user);
+            }
+        }
+
+        if(user.getSubscriptionTier() == SubscriptionTier.MEMBER){
+            throw new RuntimeException("Vui lòng nâng cấp gói PLUS hoặc PRO để tải xuống tài liệu");
+        }
+
+        if(user.getCurrentCycleEnd() != null && LocalDateTime.now().isAfter(user.getCurrentCycleEnd())){
+            user.setDownloadedThisMonth(0);
+            user.setCurrentCycleEnd(user.getCurrentCycleEnd().plusMonths(1));
+            userRepository.save(user);
+        }
+
+        boolean isFirstTimeDownload = true;
+        Optional<AccessLog> accessLog = accessLogRepository.findByUserIdAndDocumentId(userId, documentId);
+        if(accessLog.isPresent() && accessLog.get().isHasDownloaded()){
+            isFirstTimeDownload = false;
+        }
+
+
+
+        if(isFirstTimeDownload){
+
+            int limit = (user.getSubscriptionTier() == SubscriptionTier.PLUS) ? plusDownloadLimit : proDownloadLimit;
+
+            if(user.getDownloadedThisMonth() >= limit){
+                throw new RuntimeException("Bạn đã dùng hết lượt tải tài liệu trong tháng");
+            }
+
+            user.setDownloadedThisMonth(user.getDownloadedThisMonth() + 1);
+            userRepository.save(user);
+        }
+
+        accessLogService.recordDownload(documentId, userId);
+        return cloudinaryService.generateDownloadUrl(document.getFilePublicId(), "raw");
+    }
 }

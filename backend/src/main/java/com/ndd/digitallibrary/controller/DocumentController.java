@@ -4,7 +4,9 @@ import com.ndd.digitallibrary.dto.request.CreateDocumentRequest;
 import com.ndd.digitallibrary.dto.request.UpdateDocumentRequest;
 import com.ndd.digitallibrary.dto.response.ApiResponse;
 import com.ndd.digitallibrary.dto.response.DocumentResponse;
+import com.ndd.digitallibrary.dto.response.DocumentSummaryResponse;
 import com.ndd.digitallibrary.entity.Document;
+import com.ndd.digitallibrary.entity.User;
 import com.ndd.digitallibrary.service.DocumentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,9 +27,9 @@ public class DocumentController {
     private final DocumentService documentService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<DocumentResponse>>> getAllDocuments(){
+    public ResponseEntity<ApiResponse<List<DocumentSummaryResponse>>> getAllDocuments(){
 
-        ApiResponse<List<DocumentResponse>> apiResponse = ApiResponse.<List<DocumentResponse>>builder()
+        ApiResponse<List<DocumentSummaryResponse>> apiResponse = ApiResponse.<List<DocumentSummaryResponse>>builder()
                 .data(documentService.getAllDocuments())
                 .status(200)
                 .build();
@@ -87,6 +89,45 @@ public class DocumentController {
                 .data(documentService.updateDocument(request, id))
                 .status(200)
                 .message("Cập nhật tài liệu thành công")
+                .build();
+
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    @GetMapping("/{id}/stream")
+    public ResponseEntity<ApiResponse<String>> streamDocument(
+            @PathVariable Long id,
+            Authentication authentication
+    ){
+
+        Long userId = null;
+
+        if(authentication != null && authentication.getPrincipal() instanceof User){
+            userId = ((User) authentication.getPrincipal()).getId();
+        }
+
+        ApiResponse<String> apiResponse = ApiResponse.<String>builder()
+                .status(200)
+                .data(documentService.getStreamUrl(id, userId))
+                .build();
+
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    @GetMapping("/{id}/download")
+    public ResponseEntity<ApiResponse<String>> downloadDocument(
+            @PathVariable Long id,
+            Authentication authentication
+    ){
+        if(authentication == null || !(authentication.getPrincipal() instanceof User)){
+            throw new RuntimeException("Vui lòng đăng nhập để tải tài liệu");
+        }
+
+        Long userId = ((User) authentication.getPrincipal()).getId();
+
+        ApiResponse<String> apiResponse = ApiResponse.<String>builder()
+                .status(200)
+                .data(documentService.getDownloadUrl(id, userId))
                 .build();
 
         return ResponseEntity.ok(apiResponse);
