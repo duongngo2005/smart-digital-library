@@ -24,6 +24,9 @@ app:
     secret: U21hcnREaWdpdGFsTGlicmFyeVNlY3JldEtleUZvckhTMjU2QWxnb3JpdGhtMjAyNA
     access-expiration-ms: 900000
     refresh-expiration-ms: 604800000
+  subscription:
+    plus-download-limit: 100
+    pro-download-limit: 300
 
 cloudinary:
   cloud-name: docidan7t

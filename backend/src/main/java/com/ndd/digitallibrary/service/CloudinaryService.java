@@ -1,6 +1,7 @@
 package com.ndd.digitallibrary.service;
 
 import com.cloudinary.Cloudinary;
+import com.cloudinary.Transformation;
 import com.cloudinary.utils.ObjectUtils;
 import com.ndd.digitallibrary.dto.response.CloudinaryResponse;
 import lombok.RequiredArgsConstructor;
@@ -43,7 +44,8 @@ public class CloudinaryService {
                     ObjectUtils.asMap(
                             "folder", "digital-library/documents",
                             "resource_type", "raw",
-                            "allowed_formats", "pdf"
+                            "allowed_formats", "pdf,docx,epub,mp3,wav",
+                            "type", "authenticated"
                     )
             );
 
@@ -67,6 +69,37 @@ public class CloudinaryService {
         } catch (IOException e) {
             throw new RuntimeException("Xóa file thất bại " + e.getMessage());
         }
+    }
+
+    public String generateSignedUrl(String publicId, String resourceType){
+        try{
+
+            long expiresAt = (System.currentTimeMillis() / 1000L) + 3600;
+
+            return cloudinary.url()
+                    .resourceType(resourceType)
+                    .type("authenticated")
+                    .signed(true)
+                    .generate(publicId);
+
+        }catch(Exception e){
+            throw new RuntimeException("Không thể tạo link an toàn " + e.getMessage());
+        }
+    }
+
+    public String generateDownloadUrl(String publicId, String resourceType){
+
+        try{
+            return cloudinary.url()
+                    .resourceType(resourceType)
+                    .type("authenticated")
+                    .signed(true)
+                    .transformation(new Transformation<>().flags("attachment"))
+                    .generate(publicId);
+        }catch(Exception e){
+            throw new RuntimeException("Không thể tạo được link tải" + e.getMessage());
+        }
+
     }
 
 }
