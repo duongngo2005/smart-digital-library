@@ -3,6 +3,8 @@ package com.ndd.digitallibrary.dto.response;
 import com.ndd.digitallibrary.entity.User;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Setter @Getter
 @Builder
 @NoArgsConstructor
@@ -15,6 +17,8 @@ public class UserResponse {
     private String avatarUrl;
     private String userStatus;
     private String subscriptionTier;
+    private int downloadedThisMonth;
+    private LocalDateTime subscriptionUntil;
 
     public static UserResponse fromEntity(User user){
         return UserResponse.builder()
@@ -25,6 +29,8 @@ public class UserResponse {
                 .avatarUrl(user.getAvatarUrl())
                 .userStatus(user.getUserStatus().name())
                 .subscriptionTier(user.getSubscriptionTier().name())
+                .subscriptionUntil(user.getSubscriptionUntil())
+                .downloadedThisMonth(user.getDownloadedThisMonth())
                 .build();
     }
 }
