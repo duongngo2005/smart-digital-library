@@ -15,13 +15,10 @@ import com.ndd.digitallibrary.repository.DocumentRepository;
 import com.ndd.digitallibrary.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -37,6 +34,7 @@ public class DocumentService {
     private final UserRepository userRepository;
     private final AccessLogService accessLogService;
     private final AccessLogRepository accessLogRepository;
+    private final UserService userService;
 
     @Value("${app.subscription.plus-download-limit:100}")
     private int plusDownloadLimit;
@@ -232,25 +230,10 @@ public class DocumentService {
             return cloudinaryService.generateDownloadUrl(document.getFilePublicId(), "raw");
         }
 
-        if(user.getSubscriptionTier() != SubscriptionTier.MEMBER && user.getSubscriptionUntil() != null){
-            if(LocalDateTime.now().isAfter(user.getSubscriptionUntil())){
-                user.setSubscriptionTier(SubscriptionTier.MEMBER);
-                user.setCurrentCycleEnd(null);
-                user.setDownloadedThisMonth(0);
-                user.setSubscriptionStartAt(null);
-                user.setSubscriptionUntil(null);
-                userRepository.save(user);
-            }
-        }
+        userService.checkAndSyncUserState(user);
 
         if(user.getSubscriptionTier() == SubscriptionTier.MEMBER){
             throw new RuntimeException("Vui lòng nâng cấp gói PLUS hoặc PRO để tải xuống tài liệu");
-        }
-
-        if(user.getCurrentCycleEnd() != null && LocalDateTime.now().isAfter(user.getCurrentCycleEnd())){
-            user.setDownloadedThisMonth(0);
-            user.setCurrentCycleEnd(user.getCurrentCycleEnd().plusMonths(1));
-            userRepository.save(user);
         }
 
         boolean isFirstTimeDownload = true;
@@ -258,8 +241,6 @@ public class DocumentService {
         if(accessLog.isPresent() && accessLog.get().isHasDownloaded()){
             isFirstTimeDownload = false;
         }
-
-
 
         if(isFirstTimeDownload){
 

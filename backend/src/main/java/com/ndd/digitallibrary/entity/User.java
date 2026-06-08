@@ -37,6 +37,7 @@ public class User extends BaseEntity implements UserDetails {
     private Role role = Role.USER;
 
     private String avatarUrl;
+    private String avatarPublicId;
 
     @Builder.Default
     @Enumerated(EnumType.STRING)
