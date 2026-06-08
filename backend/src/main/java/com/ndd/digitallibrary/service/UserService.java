@@ -43,10 +43,7 @@ public class UserService {
         }
     }
 
-    public UserResponse getMyUserProfile(Long userId){
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng này"));
-
+    public UserResponse getMyUserProfile(User user){
         return UserResponse.fromEntity(user);
     }
 
@@ -59,7 +56,6 @@ public class UserService {
         return UserResponse.fromEntity(userRepository.save(user));
     }
 
-    @Transactional
     public UserResponse updateAvatar(Long userId, MultipartFile avatar){
 
         if(avatar == null || avatar.isEmpty()){
