@@ -32,6 +32,7 @@ public class AuthService {
     private final JwtConfig jwtConfig;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
+    private final UserService userService;
 
     @Transactional
     public AuthResponse register(RegisterRequest request){
@@ -86,7 +87,7 @@ public class AuthService {
             throw new RuntimeException("Tài khoản đang bị khóa");
         }
 
-        checkAndUpdateSubscription(user);
+        userService.checkAndSyncUserState(user);
 
         return createAuthResponse(user);
     }
@@ -107,7 +108,7 @@ public class AuthService {
 
         User user = refreshToken.getUser();
 
-        checkAndUpdateSubscription(user);
+        userService.checkAndSyncUserState(user);
 
         String newAccessToken = jwtService.generateAccessToken(user);
 
@@ -125,20 +126,6 @@ public class AuthService {
                     refreshToken.setRevoked(true);
                     refreshTokenRepository.save(refreshToken);
                 });
-    }
-
-    private void checkAndUpdateSubscription(User user){
-        if(user.getSubscriptionTier() != SubscriptionTier.MEMBER
-                && user.getSubscriptionUntil() != null
-                && user.getSubscriptionUntil().isBefore(LocalDateTime.now())){
-
-            user.setSubscriptionTier(SubscriptionTier.MEMBER);
-            user.setSubscriptionStartAt(null);
-            user.setSubscriptionUntil(null);
-            user.setCurrentCycleEnd(null);
-            user.setDownloadedThisMonth(0);
-            userRepository.save(user);
-        }
     }
 
     private AuthResponse createAuthResponse(User user){
