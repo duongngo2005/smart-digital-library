@@ -102,4 +102,24 @@ public class CloudinaryService {
 
     }
 
+    public CloudinaryResponse uploadAvatar(MultipartFile file){
+        try{
+            Map<?, ?> result = cloudinary.uploader().upload(
+                    file.getBytes(),
+                    ObjectUtils.asMap(
+                            "folder", "digital-library/avatars",
+                            "resource_type", "image",
+                            "allowed_formats", "jpg,jpeg,png,webp"
+                    )
+            );
+
+            return new CloudinaryResponse(
+                    result.get("secure_url").toString(),
+                    result.get("public_id").toString()
+            );
+        } catch (IOException e) {
+            throw new RuntimeException("Upload avatar thất bại " + e.getMessage());
+        }
+    }
+
 }
