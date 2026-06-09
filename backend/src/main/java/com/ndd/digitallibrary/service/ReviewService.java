@@ -84,6 +84,40 @@ public class ReviewService {
         return reviewRepository.findByDocumentId(documentId, pageable).map(ReviewResponse::fromEntity);
     }
 
+    @Transactional
+    public void deleteReview(Long reviewId, User user){
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy bài đánh giá"));
+
+        if(!user.getId().equals(review.getUser().getId())){
+            throw new RuntimeException("Bạn không phải chủ bài đánh giá này");
+        }
+
+        Document document = review.getDocument();
+        document.setAverageRating(calcAverageRatingDelete(review.getRating(), document));
+        document.setReviewCount(document.getReviewCount() - 1);
+        documentRepository.save(document);
+
+        reviewRepository.delete(review);
+    }
+
+    private BigDecimal calcAverageRatingDelete(short rating, Document document){
+        long oldCount = document.getReviewCount();
+
+        if(oldCount <= 1){
+            return BigDecimal.ZERO;
+        }
+
+        long newCount = document.getReviewCount()  - 1;
+        BigDecimal oldAvg = document.getAverageRating();
+
+        BigDecimal totalOldScore = oldAvg.multiply(BigDecimal.valueOf(oldCount));
+
+        BigDecimal totalNewScore = totalOldScore.subtract(BigDecimal.valueOf(rating));
+
+        return totalNewScore.divide(BigDecimal.valueOf(newCount), 2, RoundingMode.HALF_UP);
+    }
+
     private BigDecimal calcAverageRatingUpdate(short oldRating, short newRating, Document document){
         long count = document.getReviewCount();
         BigDecimal oldAvg = document.getAverageRating();

@@ -69,4 +69,19 @@ public class ReviewController {
 
         return ResponseEntity.ok(apiResponse);
     }
+
+    @DeleteMapping("/reviews/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteReview(
+            @AuthenticationPrincipal User user,
+            @PathVariable Long id
+    ){
+        reviewService.deleteReview(id, user);
+
+        ApiResponse<Void> apiResponse = ApiResponse.<Void>builder()
+                .status(200)
+                .message("Xóa bài đánh giá thành công")
+                .build();
+
+        return ResponseEntity.ok(apiResponse);
+    }
 }
