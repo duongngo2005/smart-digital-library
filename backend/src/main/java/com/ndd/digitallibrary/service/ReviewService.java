@@ -11,7 +11,6 @@ import com.ndd.digitallibrary.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.servlet.function.support.RouterFunctionMapping;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -51,6 +50,37 @@ public class ReviewService {
         review = reviewRepository.save(review);
 
         return ReviewResponse.fromEntity(review);
+    }
+
+    @Transactional
+    public ReviewResponse updateReview(Long reviewId, ReviewRequest request, User user){
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy bài đánh giá này"));
+
+        if(!user.getId().equals(review.getUser().getId())){
+            throw new RuntimeException("Bạn không có quyền sửa đánh giá này");
+        }
+
+        Document document = review.getDocument();
+        document.setAverageRating(calcAverageRatingUpdate(review.getRating(), request.getRating(), document));
+        documentRepository.save(document);
+
+        review.setComment(request.getComment());
+        review.setRating(request.getRating());
+
+        review = reviewRepository.save(review);
+        return ReviewResponse.fromEntity(review);
+    }
+
+    private BigDecimal calcAverageRatingUpdate(short oldRating, short newRating, Document document){
+        long count = document.getReviewCount();
+        BigDecimal oldAvg = document.getAverageRating();
+
+        BigDecimal totalOldScore = oldAvg.multiply(BigDecimal.valueOf(count));
+
+        BigDecimal totalNewScore = totalOldScore.add(BigDecimal.valueOf(newRating)).subtract(BigDecimal.valueOf(oldRating));
+
+        return totalNewScore.divide(BigDecimal.valueOf(count), 2, RoundingMode.HALF_UP);
     }
 
     private BigDecimal calcAverageRating(short newRating, Document document){

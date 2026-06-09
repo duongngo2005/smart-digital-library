@@ -34,4 +34,17 @@ public class ReviewController {
         return ResponseEntity.ok(apiResponse);
     }
 
+    @PutMapping("/reviews/{id}")
+    public ResponseEntity<ApiResponse<ReviewResponse>> updateReview(
+            @PathVariable Long id,
+            @Valid @RequestBody ReviewRequest request,
+            @AuthenticationPrincipal User user
+    ){
+        ApiResponse<ReviewResponse> apiResponse = ApiResponse.<ReviewResponse>builder()
+                .status(200)
+                .data(reviewService.updateReview(id, request, user))
+                .build();
+
+        return ResponseEntity.ok(apiResponse);
+    }
 }
