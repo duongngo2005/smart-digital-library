@@ -4,5 +4,5 @@ import com.ndd.digitallibrary.entity.Review;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ReviewRepository extends JpaRepository<Review, Long> {
-
+    boolean existsByUserIdAndDocumentId(Long userId, Long documentId);
 }
