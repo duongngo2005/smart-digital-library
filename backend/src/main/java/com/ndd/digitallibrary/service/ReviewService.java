@@ -9,6 +9,8 @@ import com.ndd.digitallibrary.repository.AccessLogRepository;
 import com.ndd.digitallibrary.repository.DocumentRepository;
 import com.ndd.digitallibrary.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -70,6 +72,16 @@ public class ReviewService {
 
         review = reviewRepository.save(review);
         return ReviewResponse.fromEntity(review);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ReviewResponse> getAllReviews(Long documentId, Pageable pageable){
+
+        if(!documentRepository.existsById(documentId)){
+            throw new RuntimeException("Tài liệu không tồn tại");
+        }
+
+        return reviewRepository.findByDocumentId(documentId, pageable).map(ReviewResponse::fromEntity);
     }
 
     private BigDecimal calcAverageRatingUpdate(short oldRating, short newRating, Document document){
