@@ -1,6 +1,7 @@
 package com.ndd.digitallibrary.controller;
 
 import com.ndd.digitallibrary.dto.request.CreateDocumentRequest;
+import com.ndd.digitallibrary.dto.request.DocumentFilterRequest;
 import com.ndd.digitallibrary.dto.request.UpdateDocumentRequest;
 import com.ndd.digitallibrary.dto.response.ApiResponse;
 import com.ndd.digitallibrary.dto.response.DocumentResponse;
@@ -10,11 +11,16 @@ import com.ndd.digitallibrary.entity.User;
 import com.ndd.digitallibrary.service.DocumentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,10 +33,22 @@ public class DocumentController {
     private final DocumentService documentService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<DocumentSummaryResponse>>> getAllDocuments(){
+    public ResponseEntity<ApiResponse<Page<DocumentSummaryResponse>>> getAllDocuments(
+            @ModelAttribute DocumentFilterRequest filterRequest,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir
+    ){
 
-        ApiResponse<List<DocumentSummaryResponse>> apiResponse = ApiResponse.<List<DocumentSummaryResponse>>builder()
-                .data(documentService.getAllDocuments())
+        Sort sort = sortDir.equalsIgnoreCase("asc")
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        ApiResponse<Page<DocumentSummaryResponse>> apiResponse = ApiResponse.<Page<DocumentSummaryResponse>>builder()
+                .data(documentService.searchDocuments(filterRequest, pageable))
                 .status(200)
                 .build();
 
@@ -97,14 +115,10 @@ public class DocumentController {
     @GetMapping("/{id}/stream")
     public ResponseEntity<ApiResponse<String>> streamDocument(
             @PathVariable Long id,
-            Authentication authentication
+            @AuthenticationPrincipal User user
     ){
 
-        Long userId = null;
-
-        if(authentication != null && authentication.getPrincipal() instanceof User){
-            userId = ((User) authentication.getPrincipal()).getId();
-        }
+        Long userId = (user == null) ? null : user.getId();
 
         ApiResponse<String> apiResponse = ApiResponse.<String>builder()
                 .status(200)
@@ -115,19 +129,15 @@ public class DocumentController {
     }
 
     @GetMapping("/{id}/download")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<String>> downloadDocument(
             @PathVariable Long id,
-            Authentication authentication
+            @AuthenticationPrincipal User user
     ){
-        if(authentication == null || !(authentication.getPrincipal() instanceof User)){
-            throw new RuntimeException("Vui lòng đăng nhập để tải tài liệu");
-        }
-
-        Long userId = ((User) authentication.getPrincipal()).getId();
 
         ApiResponse<String> apiResponse = ApiResponse.<String>builder()
                 .status(200)
-                .data(documentService.getDownloadUrl(id, userId))
+                .data(documentService.getDownloadUrl(id, user.getId()))
                 .build();
 
         return ResponseEntity.ok(apiResponse);

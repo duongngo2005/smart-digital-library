@@ -1,6 +1,7 @@
 package com.ndd.digitallibrary.service;
 
 import com.ndd.digitallibrary.dto.request.CreateDocumentRequest;
+import com.ndd.digitallibrary.dto.request.DocumentFilterRequest;
 import com.ndd.digitallibrary.dto.request.UpdateDocumentRequest;
 import com.ndd.digitallibrary.dto.response.CloudinaryResponse;
 import com.ndd.digitallibrary.dto.response.DocumentResponse;
@@ -13,8 +14,12 @@ import com.ndd.digitallibrary.repository.AccessLogRepository;
 import com.ndd.digitallibrary.repository.CategoryRepository;
 import com.ndd.digitallibrary.repository.DocumentRepository;
 import com.ndd.digitallibrary.repository.UserRepository;
+import com.ndd.digitallibrary.specification.DocumentSpecification;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -50,8 +55,17 @@ public class DocumentService {
         return DocumentResponse.fromEntity(document);
     }
 
-    public List<DocumentSummaryResponse> getAllDocuments(){
-        return documentRepository.findAll().stream().map(DocumentSummaryResponse::fromEntity).toList();
+    @Transactional(readOnly = true)
+    public Page<DocumentSummaryResponse> searchDocuments(DocumentFilterRequest filterRequest, Pageable pageable){
+
+        Specification<Document> spec = Specification.allOf(
+                DocumentSpecification.isPublished(),
+                DocumentSpecification.hasCategoryId(filterRequest.getCategoryId()),
+                DocumentSpecification.hasTag(filterRequest.getTagId()),
+                DocumentSpecification.hasKeyword(filterRequest.getKeyword())
+        );
+
+        return documentRepository.findAll(spec, pageable).map(DocumentSummaryResponse::fromEntity);
     }
 
     @Transactional
@@ -198,10 +212,11 @@ public class DocumentService {
         return DocumentResponse.fromEntity(document);
     }
 
+    @Transactional
     public String getStreamUrl(Long documentId, Long userId){
 
         Document document = documentRepository.findById(documentId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấ tài liệu này"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy tài liệu này"));
 
         if(!document.isPublicAccess() && userId == null){
             throw new RuntimeException("Đăng nhập để đọc tài liệu này");

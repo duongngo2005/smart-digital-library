@@ -18,14 +18,13 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1")
 @RequiredArgsConstructor
 @Validated
 public class ReviewController {
 
     private final ReviewService reviewService;
 
-    @PostMapping("/documents/{documentId}/review")
+    @PostMapping("/documents/{documentId}/reviews")
     public ResponseEntity<ApiResponse<ReviewResponse>> postReview(
             @AuthenticationPrincipal User user,
             @PathVariable Long documentId,
