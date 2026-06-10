@@ -15,6 +15,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -97,14 +98,10 @@ public class DocumentController {
     @GetMapping("/{id}/stream")
     public ResponseEntity<ApiResponse<String>> streamDocument(
             @PathVariable Long id,
-            Authentication authentication
+            @AuthenticationPrincipal User user
     ){
 
-        Long userId = null;
-
-        if(authentication != null && authentication.getPrincipal() instanceof User){
-            userId = ((User) authentication.getPrincipal()).getId();
-        }
+        Long userId = (user == null) ? null : user.getId();
 
         ApiResponse<String> apiResponse = ApiResponse.<String>builder()
                 .status(200)
@@ -115,19 +112,15 @@ public class DocumentController {
     }
 
     @GetMapping("/{id}/download")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<String>> downloadDocument(
             @PathVariable Long id,
-            Authentication authentication
+            @AuthenticationPrincipal User user
     ){
-        if(authentication == null || !(authentication.getPrincipal() instanceof User)){
-            throw new RuntimeException("Vui lòng đăng nhập để tải tài liệu");
-        }
-
-        Long userId = ((User) authentication.getPrincipal()).getId();
 
         ApiResponse<String> apiResponse = ApiResponse.<String>builder()
                 .status(200)
-                .data(documentService.getDownloadUrl(id, userId))
+                .data(documentService.getDownloadUrl(id, user.getId()))
                 .build();
 
         return ResponseEntity.ok(apiResponse);

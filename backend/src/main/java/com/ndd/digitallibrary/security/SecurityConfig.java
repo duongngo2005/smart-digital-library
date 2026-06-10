@@ -45,13 +45,6 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/tags/**").permitAll()
 //                        Admin
                         .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/categories/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/categories/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/categories/**").hasRole("ADMIN")
-//                        ADMIN + LIBRARIAN
-                        .requestMatchers(HttpMethod.POST, "/documents/**").hasAnyRole("ADMIN", "LIBRARIAN")
-                        .requestMatchers(HttpMethod.PUT, "/documents/**").hasAnyRole("ADMIN", "LIBRARIAN")
-                        .requestMatchers(HttpMethod.DELETE, "/documents/**").hasAnyRole("ADMIN", "LIBRARIAN")
 
                         .anyRequest().authenticated()
                 )

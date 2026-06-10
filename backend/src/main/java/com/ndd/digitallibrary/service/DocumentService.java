@@ -198,10 +198,11 @@ public class DocumentService {
         return DocumentResponse.fromEntity(document);
     }
 
+    @Transactional
     public String getStreamUrl(Long documentId, Long userId){
 
         Document document = documentRepository.findById(documentId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấ tài liệu này"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy tài liệu này"));
 
         if(!document.isPublicAccess() && userId == null){
             throw new RuntimeException("Đăng nhập để đọc tài liệu này");
