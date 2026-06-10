@@ -1,6 +1,7 @@
 package com.ndd.digitallibrary.controller;
 
 import com.ndd.digitallibrary.dto.request.CreateDocumentRequest;
+import com.ndd.digitallibrary.dto.request.DocumentFilterRequest;
 import com.ndd.digitallibrary.dto.request.UpdateDocumentRequest;
 import com.ndd.digitallibrary.dto.response.ApiResponse;
 import com.ndd.digitallibrary.dto.response.DocumentResponse;
@@ -10,6 +11,10 @@ import com.ndd.digitallibrary.entity.User;
 import com.ndd.digitallibrary.service.DocumentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -28,10 +33,22 @@ public class DocumentController {
     private final DocumentService documentService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<DocumentSummaryResponse>>> getAllDocuments(){
+    public ResponseEntity<ApiResponse<Page<DocumentSummaryResponse>>> getAllDocuments(
+            @ModelAttribute DocumentFilterRequest filterRequest,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir
+    ){
 
-        ApiResponse<List<DocumentSummaryResponse>> apiResponse = ApiResponse.<List<DocumentSummaryResponse>>builder()
-                .data(documentService.getAllDocuments())
+        Sort sort = sortDir.equalsIgnoreCase("asc")
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        ApiResponse<Page<DocumentSummaryResponse>> apiResponse = ApiResponse.<Page<DocumentSummaryResponse>>builder()
+                .data(documentService.searchDocuments(filterRequest, pageable))
                 .status(200)
                 .build();
 
