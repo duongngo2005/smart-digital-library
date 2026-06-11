@@ -1,9 +1,11 @@
 package com.ndd.digitallibrary.controller;
 
+import com.ndd.digitallibrary.dto.request.UpdateUserStatusRequest;
 import com.ndd.digitallibrary.dto.request.UserFilterRequest;
 import com.ndd.digitallibrary.dto.response.ApiResponse;
 import com.ndd.digitallibrary.dto.response.UserResponse;
 import com.ndd.digitallibrary.service.AdminService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -34,6 +36,20 @@ public class AdminController {
         ApiResponse<Page<UserResponse>> apiResponse = ApiResponse.<Page<UserResponse>>builder()
                 .status(200)
                 .data(adminService.searchUser(filterRequest, pageable))
+                .build();
+
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    @PatchMapping("/users/{id}/status")
+    public ResponseEntity<ApiResponse<UserResponse>> updateUserStatus(
+            @Valid @RequestBody UpdateUserStatusRequest request,
+            @PathVariable Long id
+    ){
+        ApiResponse<UserResponse> apiResponse = ApiResponse.<UserResponse>builder()
+                .message("Thay đổi trạng thái người dùng thành công")
+                .status(200)
+                .data(adminService.updateUserStatus(request, id))
                 .build();
 
         return ResponseEntity.ok(apiResponse);

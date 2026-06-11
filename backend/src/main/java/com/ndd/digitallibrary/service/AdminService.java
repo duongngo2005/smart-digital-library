@@ -1,5 +1,6 @@
 package com.ndd.digitallibrary.service;
 
+import com.ndd.digitallibrary.dto.request.UpdateUserStatusRequest;
 import com.ndd.digitallibrary.dto.request.UserFilterRequest;
 import com.ndd.digitallibrary.dto.response.UserResponse;
 import com.ndd.digitallibrary.entity.User;
@@ -7,7 +8,6 @@ import com.ndd.digitallibrary.repository.UserRepository;
 import com.ndd.digitallibrary.specification.UserSpecification;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -32,5 +32,13 @@ public class AdminService {
         return  userRepository.findAll(specification, pageable).map(UserResponse::fromEntity);
     }
 
+    @Transactional
+    public UserResponse updateUserStatus(UpdateUserStatusRequest request, Long userId){
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng này"));
 
+        user.setUserStatus(request.getUserStatus());
+        user = userRepository.save(user);
+        return UserResponse.fromEntity(user);
+    }
 }
