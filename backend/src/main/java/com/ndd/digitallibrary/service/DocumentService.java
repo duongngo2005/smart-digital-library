@@ -10,6 +10,7 @@ import com.ndd.digitallibrary.entity.*;
 import com.ndd.digitallibrary.enums.FileType;
 import com.ndd.digitallibrary.enums.Role;
 import com.ndd.digitallibrary.enums.SubscriptionTier;
+import com.ndd.digitallibrary.exception.AppException;
 import com.ndd.digitallibrary.repository.AccessLogRepository;
 import com.ndd.digitallibrary.repository.CategoryRepository;
 import com.ndd.digitallibrary.repository.DocumentRepository;
@@ -20,6 +21,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -50,7 +52,7 @@ public class DocumentService {
     public DocumentResponse getDocumentById(Long id){
 
         Document document = documentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy tài liệu này"));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy tài liệu này"));
 
         return DocumentResponse.fromEntity(document);
     }
@@ -77,11 +79,11 @@ public class DocumentService {
                 request.getPublisher(),
                 request.getPublishedYear()
         )){
-            throw new RuntimeException("Tài liệu đã tồn tại trong hệ thống");
+            throw new AppException(HttpStatus.CONFLICT, "Tài liệu đã tồn tại trong hệ thống");
         }
 
         User uploader = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng hiện tại"));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng hiện tại"));
 
         CloudinaryResponse fileResponse = cloudinaryService.uploadDocument(request.getDocumentFile());
 
@@ -103,7 +105,7 @@ public class DocumentService {
         }
 
         Category category = categoryRepository.findById(request.getCategoryId())
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy danh mục"));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy danh mục"));
 
         List<Tag> tags = new ArrayList<>();
         if(request.getTagNames() != null && !request.getTagNames().isEmpty()){
@@ -145,7 +147,7 @@ public class DocumentService {
     public void deleteDocument(Long id){
 
         Document document = documentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy tài liệu này"));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy tài liệu này"));
 
         cloudinaryService.deleteFile(document.getFilePublicId(), "raw");
 
@@ -160,7 +162,7 @@ public class DocumentService {
     public DocumentResponse updateDocument(UpdateDocumentRequest request, Long id){
 
         Document document = documentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy tài liệu này"));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy tài liệu này"));
 
         if (request.getDocumentFile() != null){
             cloudinaryService.deleteFile(document.getFilePublicId(), "raw");
@@ -199,7 +201,7 @@ public class DocumentService {
 
         if(request.getCategoryId() != null){
             Category category = categoryRepository.findById(request.getCategoryId())
-                    .orElseThrow(() -> new RuntimeException("Không tìm thấy danh mục này"));
+                    .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy danh mục này"));
             document.setCategory(category);
         }
 
@@ -216,10 +218,10 @@ public class DocumentService {
     public String getStreamUrl(Long documentId, Long userId){
 
         Document document = documentRepository.findById(documentId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy tài liệu này"));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy tài liệu này"));
 
         if(!document.isPublicAccess() && userId == null){
-            throw new RuntimeException("Đăng nhập để đọc tài liệu này");
+            throw new AppException(HttpStatus.UNAUTHORIZED, "Đăng nhập để đọc tài liệu này");
         }
 
         if(userId != null){
@@ -232,13 +234,13 @@ public class DocumentService {
     @Transactional
     public String getDownloadUrl(Long documentId, Long userId){
         if(userId == null){
-            throw new RuntimeException("Đăng nhập để tải tài liệu");
+            throw new AppException(HttpStatus.UNAUTHORIZED, "Đăng nhập để tải tài liệu");
         }
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng hiện tại"));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng hiện tại"));
         Document document = documentRepository.findById(documentId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy tài liệu"));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy tài liệu"));
 
         if(user.getRole() == Role.ADMIN || user.getRole() == Role.LIBRARIAN){
             accessLogService.recordDownload(documentId, userId);
@@ -248,7 +250,7 @@ public class DocumentService {
         userService.checkAndSyncUserState(user);
 
         if(user.getSubscriptionTier() == SubscriptionTier.MEMBER){
-            throw new RuntimeException("Vui lòng nâng cấp gói PLUS hoặc PRO để tải xuống tài liệu");
+            throw new AppException(HttpStatus.FORBIDDEN, "Vui lòng nâng cấp gói PLUS hoặc PRO để tải xuống tài liệu");
         }
 
         boolean isFirstTimeDownload = true;
@@ -262,7 +264,7 @@ public class DocumentService {
             int limit = (user.getSubscriptionTier() == SubscriptionTier.PLUS) ? plusDownloadLimit : proDownloadLimit;
 
             if(user.getDownloadedThisMonth() >= limit){
-                throw new RuntimeException("Bạn đã dùng hết lượt tải tài liệu trong tháng");
+                throw new AppException(HttpStatus.FORBIDDEN, "Bạn đã dùng hết lượt tải tài liệu trong tháng");
             }
 
             user.setDownloadedThisMonth(user.getDownloadedThisMonth() + 1);

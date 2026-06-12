@@ -5,12 +5,14 @@ import com.ndd.digitallibrary.dto.response.ReviewResponse;
 import com.ndd.digitallibrary.entity.Document;
 import com.ndd.digitallibrary.entity.Review;
 import com.ndd.digitallibrary.entity.User;
+import com.ndd.digitallibrary.exception.AppException;
 import com.ndd.digitallibrary.repository.AccessLogRepository;
 import com.ndd.digitallibrary.repository.DocumentRepository;
 import com.ndd.digitallibrary.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,15 +30,15 @@ public class ReviewService {
     @Transactional
     public ReviewResponse createReview(Long documentId, User user, ReviewRequest request){
         if(!accessLogRepository.existsByUserIdAndDocumentId(user.getId(), documentId)){
-            throw new RuntimeException("Bạn cần đọc tài liệu này trước khi viết đánh giá");
+            throw new AppException(HttpStatus.BAD_REQUEST, "Bạn cần đọc tài liệu này trước khi viết đánh giá");
         }
 
         if(reviewRepository.existsByUserIdAndDocumentId(user.getId(), documentId)){
-            throw new RuntimeException("Bạn đã viết đánh giá tài liệu này một lần rồi");
+            throw new AppException(HttpStatus.CONFLICT, "Bạn đã viết đánh giá tài liệu này một lần rồi");
         }
 
         Document document = documentRepository.findById(documentId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy tài liệu này"));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy tài liệu này"));
 
         Review review = Review.builder()
                 .rating(request.getRating())
@@ -57,10 +59,10 @@ public class ReviewService {
     @Transactional
     public ReviewResponse updateReview(Long reviewId, ReviewRequest request, User user){
         Review review = reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy bài đánh giá này"));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy bài đánh giá này"));
 
         if(!user.getId().equals(review.getUser().getId())){
-            throw new RuntimeException("Bạn không có quyền sửa đánh giá này");
+            throw new AppException(HttpStatus.FORBIDDEN, "Bạn không có quyền sửa đánh giá này");
         }
 
         Document document = review.getDocument();
@@ -78,7 +80,7 @@ public class ReviewService {
     public Page<ReviewResponse> getAllReviews(Long documentId, Pageable pageable){
 
         if(!documentRepository.existsById(documentId)){
-            throw new RuntimeException("Tài liệu không tồn tại");
+            throw new AppException(HttpStatus.NOT_FOUND, "Tài liệu không tồn tại");
         }
 
         return reviewRepository.findByDocumentId(documentId, pageable).map(ReviewResponse::fromEntity);
@@ -87,10 +89,10 @@ public class ReviewService {
     @Transactional
     public void deleteReview(Long reviewId, User user){
         Review review = reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy bài đánh giá"));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy bài đánh giá"));
 
         if(!user.getId().equals(review.getUser().getId())){
-            throw new RuntimeException("Bạn không phải chủ bài đánh giá này");
+            throw new AppException(HttpStatus.FORBIDDEN, "Bạn không phải chủ bài đánh giá này");
         }
 
         Document document = review.getDocument();

@@ -5,12 +5,14 @@ import com.ndd.digitallibrary.dto.response.DocumentSummaryResponse;
 import com.ndd.digitallibrary.entity.AccessLog;
 import com.ndd.digitallibrary.entity.Document;
 import com.ndd.digitallibrary.entity.User;
+import com.ndd.digitallibrary.exception.AppException;
 import com.ndd.digitallibrary.repository.AccessLogRepository;
 import com.ndd.digitallibrary.repository.DocumentRepository;
 import com.ndd.digitallibrary.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,10 +41,10 @@ public class AccessLogService {
                         },
                         () -> {
                             Document document = documentRepository.findById(documentId)
-                                    .orElseThrow(() -> new RuntimeException("Không tìm thấy tài liệu này"));
+                                    .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy tài liệu này"));
 
                             User user = userRepository.findById(userId)
-                                    .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng này"));
+                                    .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng này"));
 
                             AccessLog newAccessLog = AccessLog.builder()
                                     .user(user)
@@ -63,7 +65,7 @@ public class AccessLogService {
     public void recordDownload(Long documentId, Long userId){
 
         Document document = documentRepository.findById(documentId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy tài liệu này"));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy tài liệu này"));
 
         accessLogRepository.findByUserIdAndDocumentId(userId, documentId)
                 .ifPresentOrElse(
@@ -76,7 +78,7 @@ public class AccessLogService {
                         },
                         () -> {
                             User user = userRepository.findById(userId)
-                                    .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng hiện tại"));
+                                    .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng hiện tại"));
 
                             AccessLog newAccessLog = AccessLog.builder()
                                     .user(user)
@@ -112,7 +114,7 @@ public class AccessLogService {
     public void updateReadingProgress(Long userId, Long documentId, int page){
 
         AccessLog accessLog = accessLogRepository.findByUserIdAndDocumentId(userId, documentId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy lịch sử truy cập"));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy lịch sử truy cập"));
 
         accessLog.setLastReadPage(page);
     }

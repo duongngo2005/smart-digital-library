@@ -4,8 +4,10 @@ import com.github.slugify.Slugify;
 import com.ndd.digitallibrary.dto.request.TagRequest;
 import com.ndd.digitallibrary.dto.response.TagResponse;
 import com.ndd.digitallibrary.entity.Tag;
+import com.ndd.digitallibrary.exception.AppException;
 import com.ndd.digitallibrary.repository.TagRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,7 +30,7 @@ public class TagService {
         String generatedSlug = slugify.slugify(request.getName());
 
         if (tagRepository.findBySlug(generatedSlug).isPresent()){
-            throw new RuntimeException("Thẻ này đã tồn tại");
+            throw new AppException(HttpStatus.CONFLICT, "Thẻ này đã tồn tại");
         }
 
         Tag tag = Tag.builder()
@@ -65,12 +67,12 @@ public class TagService {
     @Transactional
     public TagResponse updateTag(TagRequest request, Long id){
         Tag tag = tagRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Thẻ này không tồn tại"));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Thẻ này không tồn tại"));
 
         String generatedSlug = slugify.slugify(request.getName());
 
         if(!tag.getSlug().equals(generatedSlug) && tagRepository.findBySlug(generatedSlug).isPresent()){
-            throw new RuntimeException("Tên thẻ bị trùng");
+            throw new AppException(HttpStatus.CONFLICT, "Tên thẻ bị trùng");
         }
 
         tag.setSlug(generatedSlug);
@@ -84,7 +86,7 @@ public class TagService {
     public void deleteTag(Long id){
 
         Tag tag = tagRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Thẻ này không tồn tại"));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Thẻ này không tồn tại"));
 
         tagRepository.delete(tag);
     }
@@ -95,7 +97,7 @@ public class TagService {
 
     public TagResponse getTagById(Long id){
         Tag tag = tagRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tồn tại thẻ này trên hệ thống"));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Thẻ này không tồn tại"));
 
         return TagResponse.fromEntity(tag);
     }
