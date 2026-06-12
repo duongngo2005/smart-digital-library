@@ -1,7 +1,9 @@
 package com.ndd.digitallibrary.exception;
 
+import org.apache.coyote.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.LockedException;
@@ -36,15 +38,13 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<Map<String, Object>> handleBadCredentials(
-            BadCredentialsException ex
-    ){
-        return buildResponse(HttpStatus.UNAUTHORIZED, "Email hoặc mật khẩu không đúng");
+    public ResponseEntity<Map<String, Object>> handleBadCredential(BadCredentialsException ex){
+        return buildResponse(HttpStatus.UNAUTHORIZED, "Tài khoản hoặc mật khẩu không đúng");
     }
 
     @ExceptionHandler(LockedException.class)
-    public ResponseEntity<Map<String, Object>> handleLocked(LockedException ex){
-        return buildResponse(HttpStatus.FORBIDDEN, "Tài khoản đã bị khóa");
+    public ResponseEntity<Map<String, Object>> handleLockedAccount(LockedException ex){
+        return buildResponse(HttpStatus.FORBIDDEN, "Tài khoản đang bị khóa");
     }
 
     @ExceptionHandler(DisabledException.class)
@@ -52,9 +52,19 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.FORBIDDEN, "Tài khoản chưa được kích hoạt");
     }
 
+    @ExceptionHandler(AppException.class)
+    public ResponseEntity<?> handleAppException(AppException exception){
+        return buildResponse(exception.getHttpStatus(), exception.getMessage());
+    }
+
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Map<String, Object>> handleRuntime(RuntimeException ex){
-        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Hệ thống đã xảy ra lỗi, vui lòng thử lại sau");
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<Map<String, Object>> handleMessageNotReadable(HttpMessageNotReadableException ex){
+        return buildResponse(HttpStatus.BAD_REQUEST, "Dữ liệu không hợp lệ");
     }
 
     private ResponseEntity<Map<String, Object>> buildResponse(HttpStatus status, String message){

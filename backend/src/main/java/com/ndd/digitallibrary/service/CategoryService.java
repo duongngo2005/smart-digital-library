@@ -5,8 +5,10 @@ import com.ndd.digitallibrary.dto.request.CreateCategoryRequest;
 import com.ndd.digitallibrary.dto.request.UpdateCategoryRequest;
 import com.ndd.digitallibrary.dto.response.CategoryResponse;
 import com.ndd.digitallibrary.entity.Category;
+import com.ndd.digitallibrary.exception.AppException;
 import com.ndd.digitallibrary.repository.CategoryRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,7 +36,7 @@ public class CategoryService {
 
         if (request.getParent() != null){
             category.setParent(categoryRepository.findById(request.getParent())
-                    .orElseThrow(() -> new RuntimeException("Không tìm thấy danh mục cha")));
+                    .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy danh mục cha")));
         }
 
         category = categoryRepository.save(category);
@@ -46,7 +48,7 @@ public class CategoryService {
     public CategoryResponse updateCategory(UpdateCategoryRequest request, Long id){
 
         Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không có danh mục này"));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không có danh mục này"));
 
         if(request.getName() != null){
             category.setName(request.getName());
@@ -56,11 +58,11 @@ public class CategoryService {
         if (request.getParentId() != null){
 
             if(request.getParentId().equals(id)){
-                throw new RuntimeException("Một danh mục không thể tự nhận mình làm cha");
+                throw new AppException(HttpStatus.BAD_REQUEST, "Một danh mục không thể tự nhận mình làm cha");
             }
 
             category.setParent(categoryRepository.findById(request.getParentId())
-                    .orElseThrow(() -> new RuntimeException("Không tìm thấy danh mục cha")));
+                    .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy danh mục cha")));
         }
 
         if (request.getDescription() != null){
@@ -75,10 +77,10 @@ public class CategoryService {
     public void deleteCategory(Long id){
 
         Category category = categoryRepository.findById(id)
-                        .orElseThrow(() -> new RuntimeException("Danh mục không tồn tại"));
+                        .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Danh mục không tồn tại"));
 
         if (category.getChildren() != null && !category.getChildren().isEmpty()){
-            throw new RuntimeException("Không thể xóa danh mục này vì vẫn đang còn danh mục con");
+            throw new AppException(HttpStatus.BAD_REQUEST, "Không thể xóa danh mục này vì vẫn đang còn danh mục con");
         }
 
         categoryRepository.delete(category);
@@ -93,7 +95,7 @@ public class CategoryService {
     public CategoryResponse getCategoryById(Long id){
 
         Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy danh mục này"));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy danh mục này"));
 
         return CategoryResponse.fromEntity(category);
     }

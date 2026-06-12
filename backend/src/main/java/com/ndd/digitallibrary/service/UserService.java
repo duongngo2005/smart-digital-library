@@ -6,8 +6,10 @@ import com.ndd.digitallibrary.dto.response.CloudinaryResponse;
 import com.ndd.digitallibrary.dto.response.UserResponse;
 import com.ndd.digitallibrary.entity.User;
 import com.ndd.digitallibrary.enums.SubscriptionTier;
+import com.ndd.digitallibrary.exception.AppException;
 import com.ndd.digitallibrary.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -50,7 +52,7 @@ public class UserService {
     @Transactional
     public UserResponse updateProfile(Long userId, UpdateProfileRequest request){
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng này"));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng này"));
 
         user.setFullName(request.getFullName());
         return UserResponse.fromEntity(userRepository.save(user));
@@ -59,11 +61,11 @@ public class UserService {
     public UserResponse updateAvatar(Long userId, MultipartFile avatar){
 
         if(avatar == null || avatar.isEmpty()){
-            throw new RuntimeException("File ảnh không đươc để trống");
+            throw new AppException(HttpStatus.BAD_REQUEST, "File ảnh không đươc để trống");
         }
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng này"));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng này"));
 
         if(user.getAvatarUrl() != null && user.getAvatarPublicId() != null){
             cloudinaryService.deleteFile(user.getAvatarPublicId(), "image");
@@ -79,13 +81,13 @@ public class UserService {
     @Transactional
     public void changePassword(Long userId, ChangePasswordRequest request){
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng này"));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng này"));
 
         if (!encoder.matches(request.getCurrentPassword(), user.getPassword())){
-            throw new RuntimeException("Mật khẩu hiện tại không đúng");
+            throw new AppException(HttpStatus.BAD_REQUEST, "Mật khẩu hiện tại không đúng");
         }
         if(!request.getNewPassword().equals(request.getConfirmPassword())){
-            throw new RuntimeException("Mật khẩu mới và xác nhận mật khẩu không trùng khớp");
+            throw new AppException(HttpStatus.BAD_REQUEST, "Mật khẩu mới và xác nhận mật khẩu không trùng khớp");
         }
 
         user.setPassword(encoder.encode(request.getNewPassword()));

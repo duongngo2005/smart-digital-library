@@ -10,10 +10,12 @@ import com.ndd.digitallibrary.entity.User;
 import com.ndd.digitallibrary.enums.Role;
 import com.ndd.digitallibrary.enums.SubscriptionTier;
 import com.ndd.digitallibrary.enums.UserStatus;
+import com.ndd.digitallibrary.exception.AppException;
 import com.ndd.digitallibrary.repository.RefreshTokenRepository;
 import com.ndd.digitallibrary.repository.UserRepository;
 import com.ndd.digitallibrary.security.JwtService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -38,7 +40,7 @@ public class AuthService {
     public AuthResponse register(RegisterRequest request){
 
         if (userRepository.existsByEmail(request.getEmail())){
-            throw new RuntimeException("Email đã được sử dụng");
+            throw new AppException(HttpStatus.CONFLICT, "Email đã được sử dụng");
         }
 
         Role role = Role.USER;
@@ -80,13 +82,6 @@ public class AuthService {
 
         User user = (User) authentication.getPrincipal();
 
-        if (user.getUserStatus() == UserStatus.PENDING){
-            throw new RuntimeException("Tài khoản đang chờ phê duyệt");
-        }
-        if (user.getUserStatus() == UserStatus.SUSPENDED){
-            throw new RuntimeException("Tài khoản đang bị khóa");
-        }
-
         userService.checkAndSyncUserState(user);
 
         return createAuthResponse(user);
@@ -96,14 +91,14 @@ public class AuthService {
     public AuthResponse refreshToken(String refreshTokenStr){
 
         RefreshToken refreshToken = refreshTokenRepository.findByToken(refreshTokenStr)
-                .orElseThrow(() -> new RuntimeException("Refresh token không hợp lệ"));
+                .orElseThrow(() -> new AppException(HttpStatus.UNAUTHORIZED, "Refresh token không hợp lệ"));
 
         if (refreshToken.isRevoked()){
-            throw new RuntimeException("Refresh token đã bị thu hồi");
+            throw new AppException(HttpStatus.UNAUTHORIZED, "Refresh token đã bị thu hồi");
         }
 
         if (refreshToken.getExpiresAt().isBefore(LocalDateTime.now())){
-            throw new RuntimeException("Refresh token đã hết hạn");
+            throw new AppException(HttpStatus.UNAUTHORIZED, "Refresh token đã hết hạn");
         }
 
         User user = refreshToken.getUser();
