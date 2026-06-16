@@ -30,28 +30,26 @@ export default function AppRoutes(){
                     <Route path="/documents" element={<DocumentListPage/>}/>
                     <Route path="/documents/:id" element={<DocumentDetailPage/>}/>
                     <Route path="/pricing" element={<PricingPage/>}/>
-                </Route>
 
-                <Route element={<ProtectedRoutes/>}>
-                    <Route path="/profile" element={<ProfilePage />} />
-                    <Route path="/profile/history" element={<ReadingHistoryPage />} />
-                    <Route path="/profile/favorites" element={<FavoritesPage />} />
+                    <Route element={<ProtectedRoutes/>}>
+                        <Route path="/profile" element={<ProfilePage />} />
+                        <Route path="/profile/history" element={<ReadingHistoryPage />} />
+                        <Route path="/profile/favorites" element={<FavoritesPage />} />
 
-                    <Route element={<RoleRoutes allowedRoles={['LIBRARIAN', 'ADMIN']} />}>
-                        <Route path="/librarian" element={<LibrarianDashboard />} />
-                        <Route path="/librarian/documents" element={<MyDocumentsPage />} />
-                        <Route path="/librarian/documents/new" element={<DocumentFormPage />} />
-                        <Route path="/librarian/documents/:id/edit" element={<DocumentFormPage />} />
+                        <Route element={<RoleRoutes allowedRoles={['LIBRARIAN', 'ADMIN']} />}>
+                            <Route path="/librarian" element={<LibrarianDashboard />} />
+                            <Route path="/librarian/documents" element={<MyDocumentsPage />} />
+                            <Route path="/librarian/documents/new" element={<DocumentFormPage />} />
+                            <Route path="/librarian/documents/:id/edit" element={<DocumentFormPage />} />
+                        </Route>
 
+                        <Route element={<RoleRoutes allowedRoles={['ADMIN']} />}>
+                            <Route path="/admin" element={<AdminDashboard />} />
+                            <Route path="/admin/users" element={<UserManagementPage />} />
+                            <Route path="/admin/categories" element={<CategoryManagementPage />} />
+                        </Route>
                     </Route>
-
-                    <Route element={<RoleRoutes allowedRoles={['ADMIN']} />}>
-                        <Route path="/admin" element={<AdminDashboard />} />
-                        <Route path="/admin/users" element={<UserManagementPage />} />
-                        <Route path="/admin/categories" element={<CategoryManagementPage />} />
-                    </Route>
                 </Route>
-
             </Routes>
         </BrowserRouter>
     )

@@ -1,7 +1,7 @@
 import type { UserResponse } from "./user";
 
 export interface AuthResponse{
-    accessToken: string;
+    accessToken: string | null;
     tokenType: string;
     userResponse: UserResponse;
 }

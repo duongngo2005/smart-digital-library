@@ -11,7 +11,7 @@ export interface UserResponse {
     email: string;
     avatarUrl: string | null;
     downloadedThisMonth: number;
-    subscriptionUntil: string;
+    subscriptionUntil: string | null;
 }
 
 export interface UpdateProfileRequest{
@@ -19,7 +19,7 @@ export interface UpdateProfileRequest{
 }
 
 export interface ChangePasswordRequest{
-    oldPassword: string;
+    currentPassword: string;
     newPassword: string;
     confirmPassword: string;
 }
