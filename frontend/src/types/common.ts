@@ -14,3 +14,9 @@ export interface ApiError{
     message: string;
     errors?: Record<string, string>
 }
+
+export interface ApiResponse<T>{
+    status: number;
+    message: string | null;
+    data: T | null;
+}
