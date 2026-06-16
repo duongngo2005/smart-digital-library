@@ -1,4 +1,5 @@
 import axios from "axios";
+import { useAuthStore } from "../store/useAuthStore";
 
 const api = axios.create({
     baseURL: "http://localhost:8080/api/v1",
@@ -33,7 +34,7 @@ api.interceptors.response.use(
 
                 return api(originalRequest);
             }catch{
-                localStorage.removeItem('accessToken');
+                useAuthStore.getState().clearAuth()
                 window.location.href = '/login'
             }
         }
